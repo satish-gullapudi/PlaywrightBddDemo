@@ -1,3 +1,5 @@
+import os
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -13,8 +15,15 @@ def before_all(context):
     context.playwright = sync_playwright().start()
     browser_type = rc.readConfig("basic_info", "browser")
 
+    # Create a directory for videos if it doesn't exist
+    context.video_dir = Path("Reports")
+    context.video_dir.mkdir(parents=True, exist_ok=True)
+
     if browser_type.lower() == "chrome":
-        context.browser = context.playwright.chromium.launch(headless=False, channel="chrome")
+        context.browser = context.playwright.chromium.launch(headless=True,
+                                                             channel="chrome",
+                                                             slow_mo=500  # Milliseconds
+                                                             )
     elif browser_type.lower() == "firefox":
         context.browser = context.playwright.firefox.launch(headless=False)
     else:
@@ -24,6 +33,17 @@ def before_all(context):
 
 def before_scenario(context, scenario):
     context.start_time = datetime.now()
+
+    # Define the video path based on the scenario name
+    # Sanitize scenario name for valid filename
+    sanitized_scenario_name = "".join(c for c in scenario.name if c.isalnum() or c in (' ', '.', '_')).replace(' ', '_')
+    context.scenario_video_path = context.video_dir / f"{sanitized_scenario_name}.webm"
+
+    context.browser = context.browser.new_context(
+        record_video_dir=context.video_dir,
+        record_video_size={"width": 1280, "height": 720},  # Recommended size
+        viewport={"width": 1280, "height": 720},
+    )
     context.page = context.browser.new_page()
 
 
@@ -54,6 +74,24 @@ def after_scenario(context, scenario):
     )
 
     context.page.close()
+    time.sleep(2)
+
+    # Get the actual video path from Playwright after the context is closed
+    # Playwright might append a hash to the filename
+    video_file_path = context.page.video.path() if context.page.video else None
+
+    if video_file_path and os.path.exists(video_file_path):
+        # If Playwright generated a different name, rename it to our desired name
+        # This makes sure the file name is clean and readable for the scenario
+        try:
+            os.rename(video_file_path, context.scenario_video_path)
+            print(f"Video saved for scenario '{scenario.name}': {context.scenario_video_path.resolve()}")
+        except OSError as e:
+            print(f"Error renaming video for '{scenario.name}': {e}")
+            print(f"Original video path: {video_file_path}")
+            print(f"Desired video path: {context.scenario_video_path}")
+    else:
+        print(f"No video generated or found for scenario '{scenario.name}'.")
 
 
 def after_all(context):
