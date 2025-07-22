@@ -35,3 +35,10 @@ def step_impl(context):
 @then(u'I should go to login page')
 def step_impl(context):
     pass
+
+@then(u'I should see error message')
+def step_impl(context):
+    expected = "Invalid credentials"
+    err_locator = context.page.locator(loc.get_login_page_invalid_creds_err_msg_locator())
+    expect(err_locator).to_have_text(expected)
+    time.sleep(2)
