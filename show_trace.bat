@@ -1,0 +1,1 @@
+playwright show-trace trace.zip
