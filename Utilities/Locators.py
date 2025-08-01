@@ -27,3 +27,17 @@ def get_login_page_required_field_err_msg_locator():
 
 def get_login_page_invalid_creds_err_msg_locator():
     return rc(login_page_section, "invalid_creds_err_msg_xpath")
+
+# Recruitment Page Locators
+recruitment_section = "recruitment_page"
+def get_side_panel_recruitment_nav_link_locator():
+    return rc(recruitment_section, "side_panel_recruitment_nav_link_xpath")
+
+def get_recruitment_pg_add_new_candidate_btn_locator():
+    return rc(recruitment_section, "add_candidate_btn_xpath")
+
+def get_recruitment_pg_add_new_candidate_vacancy_dropdown_locator():
+    return rc(recruitment_section, "add_candidate_vacancy_container_xpath")
+
+def get_recruitment_pg_add_new_candidate_vacancy_dropdown_options_locator():
+    return rc(recruitment_section, "add_candidate_vacancy_dropdown_options_xpath")

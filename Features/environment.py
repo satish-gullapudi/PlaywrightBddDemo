@@ -20,7 +20,7 @@ def before_all(context):
     context.video_dir.mkdir(parents=True, exist_ok=True)
 
     if browser_type.lower() == "chrome":
-        context.browser = context.playwright.chromium.launch(headless=True,
+        context.browser = context.playwright.chromium.launch(headless=False,
                                                              channel="chrome",
                                                              slow_mo=500  # Milliseconds
                                                              )
@@ -44,10 +44,16 @@ def before_scenario(context, scenario):
         record_video_size={"width": 1280, "height": 720},  # Recommended size
         viewport={"width": 1280, "height": 720},
     )
+    # Start tracing before creating / navigating a page.
+    context.browser.tracing.start(screenshots=True, snapshots=True, sources=True)
+
     context.page = context.browser.new_page()
 
 
 def after_scenario(context, scenario):
+    # Stop tracing and export it into a zip archive.
+    context.browser.tracing.stop(path="trace.zip")
+
     scenario_name = scenario.name.split("--")[0].strip()
     end_time = datetime.now()
     status = "Passed" if scenario.status == "passed" else "Failed"
