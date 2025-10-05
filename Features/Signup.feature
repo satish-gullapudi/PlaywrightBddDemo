@@ -6,3 +6,5 @@ Feature: Signup Feature
     When I go to signup page and fill all details
     And I submit signup
     Then New user successfully to be created
+    When I get the API response
+    Then New user details should be found

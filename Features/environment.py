@@ -3,6 +3,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
+import logging
+import logging.config
 
 import allure
 from allure_commons.types import AttachmentType
@@ -14,8 +16,52 @@ from Features.PageObjects.LoginPage import LoginPage
 from Features.PageObjects.SignupPage import SignupPage
 from Features.PageObjects.HeaderNav import HeaderNav
 
+# Define a basic logger configuration
+# This will write logs to a file and/or the console
+LOG_FILE_PATH = os.path.join(str(Path.cwd()), "Logs", 'test_automation.log')
 
+logging_config = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] (%(name)s) %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'formatter': 'standard',
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'level': 'DEBUG', # Log everything to the file
+            'formatter': 'standard',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOG_FILE_PATH,
+            'maxBytes': 10485760,  # 10 MB
+            'backupCount': 5,
+        },
+    },
+    'loggers': {
+        'automation_logger': { # Custom logger name
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+    }
+}
 def before_all(context):
+    """Setup logging and custom context attributes before the test run."""
+
+    # 1. Configure the Python logger
+    logging.config.dictConfig(logging_config)
+
+    # Store the logger instance in the context for easy access
+    context.logger = logging.getLogger('automation_logger')
+    context.logger.info("Test run started. Logging configured.")
+
     # Load environment variables from .env file
     dotenv_path = ".\\secrets.env"
     load_dotenv(dotenv_path=dotenv_path, override=True)
@@ -114,6 +160,12 @@ def after_scenario(context, scenario):
 
 
 def after_all(context):
+    """Cleanup after the test run."""
+    context.logger.info("Test run finished. Closing log handlers.")
+    # Ensure all file handlers are closed
+    for handler in context.logger.handlers:
+        handler.close()
+
     context.browser.close()
     context.playwright.stop()
     context.db.close()
