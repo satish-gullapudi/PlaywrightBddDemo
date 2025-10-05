@@ -2,41 +2,32 @@ import os
 import time
 from datetime import datetime
 from pathlib import Path
-from dotenv import load_dotenv
 
 import allure
 from allure_commons.types import AttachmentType
 from playwright.sync_api import sync_playwright
 from Utilities import ReadConfig as rc
 from Utilities.DBManager import DBManager
-from Features.PageObjects.BasePage import BasePage
-from Features.PageObjects.LoginPage import LoginPage
-from Features.PageObjects.SignupPage import SignupPage
-from Features.PageObjects.HeaderNav import HeaderNav
 
 
 def before_all(context):
-    # Load environment variables from .env file
-    dotenv_path = ".\\secrets.env"
-    load_dotenv(dotenv_path=dotenv_path, override=True)
-    BROWSER = os.environ.get("BROWSER")
-
     context.db = DBManager()
     context.playwright = sync_playwright().start()
+    browser_type = rc.readConfig("basic_info", "browser")
 
     # Create a directory for videos if it doesn't exist
     context.video_dir = Path("Reports")
     context.video_dir.mkdir(parents=True, exist_ok=True)
 
-    if BROWSER.lower() in ("chrome", "chromium"):
+    if browser_type.lower() == "chrome":
         context.browser = context.playwright.chromium.launch(headless=False,
                                                              channel="chrome",
                                                              slow_mo=500  # Milliseconds
                                                              )
-    elif BROWSER.lower() == "firefox":
+    elif browser_type.lower() == "firefox":
         context.browser = context.playwright.firefox.launch(headless=False)
     else:
-        raise Exception(f"Unsupported browser: {BROWSER}")
+        raise Exception(f"Unsupported browser: {browser_type}")
     context.environment = "QA"
 
 
@@ -46,7 +37,7 @@ def before_scenario(context, scenario):
     # Define the video path based on the scenario name
     # Sanitize scenario name for valid filename
     sanitized_scenario_name = "".join(c for c in scenario.name if c.isalnum() or c in (' ', '.', '_')).replace(' ', '_')
-    context.scenario_video_path = context.video_dir / f"{sanitized_scenario_name}_{datetime.now().strftime("%m_%d_%Y_%H_%M_%S")}.webm"
+    context.scenario_video_path = context.video_dir / f"{sanitized_scenario_name}.webm"
 
     context.browser = context.browser.new_context(
         record_video_dir=context.video_dir,
@@ -57,10 +48,6 @@ def before_scenario(context, scenario):
     context.browser.tracing.start(screenshots=True, snapshots=True, sources=True)
 
     context.page = context.browser.new_page()
-    context.bp = BasePage(context.page)
-    context.lp = LoginPage(context.page)
-    context.sp = SignupPage(context.page)
-    context.header = HeaderNav(context.page)
 
 
 def after_scenario(context, scenario):

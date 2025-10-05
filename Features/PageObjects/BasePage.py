@@ -1,7 +1,3 @@
-import random
-import string
-from datetime import datetime
-
 from Utilities.ReadConfig import readConfig as rc
 import logging
 import allure
@@ -14,10 +10,24 @@ class BasePage:
 
     def __init__(self,page):
         self.page = page
-        self.get_element = lambda section, key:self.page.locator(rc(section, key))
-        self.do_click = lambda section, key:self.page.locator(rc(section, key)).click()
-        self.type_in = lambda section, key, value:self.page.locator(rc(section, key)).fill(value)
 
-    def select_dropdown_option_by_visible_text(self, section, key, visible_text):
-        ele = self.get_element(section, key)
-        ele.select_option(label=visible_text)
+    def do_click(self, locator):
+        with allure.step(f"Clicking on an Element {locator}"):
+          self.page.locator(locator).click()
+          log.logger.info(f"Clicking on an Element {locator}")
+
+    def type(self, locator, value):
+        with allure.step(f"Typing in an Element {locator} and entered value as {value}"):
+          self.page.locator(locator).fill(value)
+          log.logger.info(f"Typing in an Element {locator} and entered value as {value}")
+
+    def move_to(self, locator):
+        with allure.step(f"Moving to an Element {locator}"):
+          self.page.locator(locator).hover()
+          log.logger.info(f"Moving to an Element {locator}")
+
+
+    def select(self, locator, value):
+        with allure.step(f"Selecting from an Element {locator} and selected value as {value}"):
+          self.page.select_option(locator,value)
+          log.logger.info(f"Selecting from an Element {locator} and selected value as {value}")

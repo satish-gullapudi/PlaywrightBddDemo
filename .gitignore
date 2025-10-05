@@ -2,4 +2,3 @@
 *.pyc
 /allure-results
 /Rough
-/secrets.env

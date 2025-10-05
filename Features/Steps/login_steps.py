@@ -1,17 +1,44 @@
+import time
+
 from behave import *
 from playwright.sync_api import expect
 
 from Utilities.ReadConfig import readConfig as rc
+from Features.PageObjects.LoginPage import LoginPage
+import Utilities.Locators as loc
 
-@when(u'I enter username and password')
+
+@given(u'I navigate to OrangeHRM')
 def step_impl(context):
-    context.lp.enter_username()
-    context.lp.enter_password()
+    context.login = LoginPage(context.page)
+    context.page.goto(rc("basic_info", "url"))
+
+@when(u'I enter "{username}" and "{password}"')
+def step_impl(context,username, password):
+    context.login.enter_username(username)
+    context.login.enter_password(password)
 
 @when(u'I submit login')
 def step_impl(context):
-    context.lp.submit_login()
+    context.login.submit_login()
+    time.sleep(3)
 
-@then(u'I should be successfully logged in')
+@then(u'I should see dashboard')
 def step_impl(context):
-    expect(context.page.locator(rc("HEADER_NAV_LINKS", "header_logout_nav_link_css"))).to_have_text("Logout")
+    expected = loc.get_dashboard_url()
+    expect(context.page).to_have_url(expected)
+
+@when(u'I click logout')
+def step_impl(context):
+    pass
+
+@then(u'I should go to login page')
+def step_impl(context):
+    pass
+
+@then(u'I should see error message')
+def step_impl(context):
+    expected = "Invalid credentials"
+    err_locator = context.page.locator(loc.get_login_page_invalid_creds_err_msg_locator())
+    expect(err_locator).to_have_text(expected)
+    time.sleep(2)
