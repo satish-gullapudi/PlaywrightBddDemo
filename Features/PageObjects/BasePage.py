@@ -1,14 +1,4 @@
-import random
-import string
-from datetime import datetime
-
 from Utilities.ReadConfig import readConfig as rc
-import logging
-import allure
-
-from Utilities.LogUtil import Logger
-
-log = Logger(__name__,logging.INFO)
 
 class BasePage:
 

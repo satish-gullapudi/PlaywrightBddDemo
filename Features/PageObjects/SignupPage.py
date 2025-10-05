@@ -19,6 +19,7 @@ class SignupPage(BasePage):
             self.do_click(self.section, "signup_title_mr_checkbox_css")
         elif title == "Mrs":
             self.do_click(self.section, "signup_title_mrs_checkbox_css")
+        return title
 
     def signup_enter_signup_name(self, signup_name=None):
         if signup_name is None:
@@ -26,6 +27,7 @@ class SignupPage(BasePage):
             self.type_in(self.section, "signup_name_input_field_css", rand_signup_name)
         else:
             self.type_in(self.section, "signup_name_input_field_css", signup_name)
+        return signup_name
 
     def signup_enter_password(self, password=None):
         if password is None:
@@ -41,7 +43,7 @@ class SignupPage(BasePage):
         self.select_dropdown_option_by_visible_text(self.section, "signup_dob_days_drp_select_css",dt)
         self.select_dropdown_option_by_visible_text(self.section, "signup_dob_month_drp_select_css", month)
         self.select_dropdown_option_by_visible_text(self.section, "signup_dob_year_drp_select_css", year)
-        return dob
+        return dt, month, year
 
     def click_signup_newsletter_checkbox(self):
         self.get_element(self.section, "signup_newsletter_checkbox_css").check()

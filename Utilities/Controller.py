@@ -63,3 +63,28 @@ get_cur_dt = lambda dt_format=None: datetime.now().strftime("%m_%d_%Y") if dt_fo
 get_cur_time = lambda time_format=None: datetime.now().strftime("%H_%M_%S") if time_format is None else \
             datetime.now().strftime(time_format)
 get_random_text = lambda L: random.choice(string.ascii_uppercase) + ''.join(random.choices(string.ascii_letters, k=L - 1))
+
+from datetime import datetime
+import calendar
+
+
+def get_numeric_month_string(month_name):
+    """
+    Converts a month name (e.g., 'September') to a zero-padded month number (e.g., '09').
+
+    Args:
+        month_name (str): The full month name.
+
+    Returns:
+        str: The zero-padded month number (e.g., '09') or the original string if invalid.
+    """
+    try:
+        # 1. Convert month name to its 1-based index (e.g., September -> 9)
+        month_number = list(calendar.month_name).index(month_name.title())
+        return month_number
+
+        # # 2. Format the number as a zero-padded string (e.g., 9 -> '09')
+        # return f"{month_number:02d}"
+    except ValueError:
+        # Handle cases where the month_name is invalid or already numeric
+        return str(month_name)  # Return as is if conversion fails
