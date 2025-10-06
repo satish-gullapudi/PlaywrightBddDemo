@@ -67,7 +67,9 @@ def before_all(context):
     load_dotenv(dotenv_path=dotenv_path, override=True)
     BROWSER = os.environ.get("BROWSER")
 
+    # Initiation of DB class which handles storing and fetching tests, test results, etc.
     context.db = DBManager()
+
     context.playwright = sync_playwright().start()
 
     # Create a directory for videos if it doesn't exist
@@ -110,6 +112,19 @@ def before_scenario(context, scenario):
 
 
 def after_scenario(context, scenario):
+    if scenario.status == "failed":
+        # Check if the Playwright page object is available in the context
+        if 'page' in context:
+            # Capture the screenshot as bytes
+            screenshot_bytes = context.page.screenshot()
+
+            # Attach the screenshot to the Allure report
+            allure.attach(
+                screenshot_bytes,
+                name="Screenshot on Failure",
+                attachment_type=allure.attachment_type.PNG
+            )
+
     # Stop tracing and export it into a zip archive.
     context.browser.tracing.stop(path="trace.zip")
 
@@ -150,13 +165,13 @@ def after_scenario(context, scenario):
         # This makes sure the file name is clean and readable for the scenario
         try:
             os.rename(video_file_path, context.scenario_video_path)
-            print(f"Video saved for scenario '{scenario.name}': {context.scenario_video_path.resolve()}")
+            context.logger.info(f"Video saved for scenario '{scenario.name}': {context.scenario_video_path.resolve()}")
         except OSError as e:
-            print(f"Error renaming video for '{scenario.name}': {e}")
-            print(f"Original video path: {video_file_path}")
-            print(f"Desired video path: {context.scenario_video_path}")
+            context.logger.info(f"Error renaming video for '{scenario.name}': {e}")
+            context.logger.info(f"Original video path: {video_file_path}")
+            context.logger.info(f"Desired video path: {context.scenario_video_path}")
     else:
-        print(f"No video generated or found for scenario '{scenario.name}'.")
+        context.logger.info(f"No video generated or found for scenario '{scenario.name}'.")
 
 
 def after_all(context):

@@ -1,6 +1,0 @@
-2025-08-01 14:47:57,507 - BasePage.py:[22] - [INFO] - Typing in an Element //input[@placeholder='Username'] and entered value as Admin
-2025-08-01 14:47:58,031 - BasePage.py:[22] - [INFO] - Typing in an Element //input[@placeholder='Password'] and entered value as admin123
-2025-08-01 14:47:59,739 - BasePage.py:[17] - [INFO] - Clicking on an Element //button[normalize-space()='Login']
-2025-08-01 14:48:04,223 - BasePage.py:[17] - [INFO] - Clicking on an Element //nav[@aria-label='Sidepanel']//span[contains(normalize-space(), 'Recruitment')]
-2025-08-01 14:48:05,607 - BasePage.py:[17] - [INFO] - Clicking on an Element //button[normalize-space()='Add']
-2025-08-01 14:48:09,207 - BasePage.py:[17] - [INFO] - Clicking on an Element //div[@class='oxd-select-wrapper']

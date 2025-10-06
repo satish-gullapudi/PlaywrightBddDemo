@@ -7,3 +7,6 @@
 2025-10-05 18:37:08 [INFO] (automation_logger) Test run finished. Closing log handlers.
 2025-10-06 09:54:04 [INFO] (automation_logger) Test run started. Logging configured.
 2025-10-06 09:54:18 [INFO] (automation_logger) Test run finished. Closing log handlers.
+2025-10-06 10:28:25 [INFO] (automation_logger) Test run started. Logging configured.
+2025-10-06 10:28:38 [INFO] (automation_logger) Video saved for scenario 'Login as valid user': C:\Users\SatishKumar\OneDrive - Paktolus Solutions - HigherL LLC\Documents\GitHub\PlaywrightBddDemo\Reports\Login_as_valid_user_10_06_2025_10_28_25.webm
+2025-10-06 10:28:39 [INFO] (automation_logger) Test run finished. Closing log handlers.
