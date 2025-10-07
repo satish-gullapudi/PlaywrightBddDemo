@@ -8,3 +8,9 @@ Feature: Signup Feature
     Then New user successfully to be created
     When I get the API response
     Then New user details should be found
+
+  Scenario: Signup as existing user
+
+    Given I launch application and go to login page
+    When I signup with existing user details
+    Then I should see error message

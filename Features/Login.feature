@@ -6,3 +6,10 @@ Feature: Login Feature
     When I enter username and password
     And I submit login
     Then I should be successfully logged in
+
+  Scenario: Login as invalid user
+
+    Given I launch application and go to login page
+    When I enter invalid username and password
+    And I submit login
+    Then I should see invalid user error message

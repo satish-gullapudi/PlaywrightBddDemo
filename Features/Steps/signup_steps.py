@@ -36,6 +36,17 @@ def step_impl(context):
     context.sp.signup_enter_mobile_number()
     print(context.test_signup_data)
 
+@when(u'I signup with existing user details')
+def step_impl(context):
+    context.lp.signup_enter_name(os.environ.get("existing_user"))
+    context.lp.signup_enter_signup_email(os.environ.get("existing_email"))
+    context.lp.click_signup_submit_btn()
+
+@then(u'I should see error message')
+def step_impl(context):
+    (expect(context.page.locator(rc(context.lp.section, "signup_duplicate_user_err_msg_css")))
+     .to_have_text("Email Address already exist!"))
+
 @when(u'I submit signup')
 def step_impl(context):
     context.sp.click_signup_create_account_submit_btn()
