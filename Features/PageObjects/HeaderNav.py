@@ -10,3 +10,6 @@ class HeaderNav(BasePage):
 
     def click_header_login_naav_link(self):
         self.do_click(self.section, "header_login_nav_link_css")
+
+    def click_logout(self):
+        self.do_click(self.section, "header_logout_nav_link_css")

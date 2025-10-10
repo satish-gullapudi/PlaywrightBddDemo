@@ -28,7 +28,7 @@ class LoginPage(BasePage):
 
     def enter_username(self, username=None):
         if username is None:
-            username = os.environ.get("USERNAME")
+            username = os.environ.get("USER_EMAIL")
         self.type_in(self.section, "login_email_input_field_css", username)
 
     def enter_password(self,password=None):

@@ -28,3 +28,15 @@
 2025-10-07 11:21:03 [INFO] (automation_logger) Test run started. Logging configured.
 2025-10-07 11:21:16 [INFO] (automation_logger) Video saved for scenario 'Login as invalid user': C:\Users\SatishKumar\OneDrive - Paktolus Solutions - HigherL LLC\Documents\GitHub\PlaywrightBddDemo\Reports\Login_as_invalid_user_10_07_2025_11_21_04.webm
 2025-10-07 11:21:16 [INFO] (automation_logger) Test run finished. Closing log handlers.
+2025-10-10 09:58:30 [INFO] (automation_logger) Test run started. Logging configured.
+2025-10-10 09:58:50 [INFO] (automation_logger) Video saved for scenario 'Logout user': C:\Users\SatishKumar\OneDrive - Paktolus Solutions - HigherL LLC\Documents\GitHub\PlaywrightBddDemo\Reports\Logout_user_10_10_2025_09_58_32.webm
+2025-10-10 09:58:50 [INFO] (automation_logger) Test run finished. Closing log handlers.
+2025-10-10 10:01:29 [INFO] (automation_logger) Test run started. Logging configured.
+2025-10-10 10:01:50 [INFO] (automation_logger) Video saved for scenario 'Logout user': C:\Users\SatishKumar\OneDrive - Paktolus Solutions - HigherL LLC\Documents\GitHub\PlaywrightBddDemo\Reports\Logout_user_10_10_2025_10_01_30.webm
+2025-10-10 10:01:50 [INFO] (automation_logger) Test run finished. Closing log handlers.
+2025-10-10 10:08:24 [INFO] (automation_logger) Test run started. Logging configured.
+2025-10-10 10:08:44 [INFO] (automation_logger) Video saved for scenario 'Logout user': C:\Users\SatishKumar\OneDrive - Paktolus Solutions - HigherL LLC\Documents\GitHub\PlaywrightBddDemo\Reports\Logout_user_10_10_2025_10_08_25.webm
+2025-10-10 10:08:44 [INFO] (automation_logger) Test run finished. Closing log handlers.
+2025-10-10 10:10:37 [INFO] (automation_logger) Test run started. Logging configured.
+2025-10-10 10:10:54 [INFO] (automation_logger) Video saved for scenario 'Logout user': C:\Users\SatishKumar\OneDrive - Paktolus Solutions - HigherL LLC\Documents\GitHub\PlaywrightBddDemo\Reports\Logout_user_10_10_2025_10_10_38.webm
+2025-10-10 10:10:54 [INFO] (automation_logger) Test run finished. Closing log handlers.
