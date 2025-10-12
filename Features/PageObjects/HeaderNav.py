@@ -8,6 +8,9 @@ class HeaderNav(BasePage):
     def __init__(self,page):
         super().__init__(page)
 
+    def click_header_products_nav_link(self):
+        self.do_click(self.section, "header_products_nav_link_css")
+
     def click_header_login_naav_link(self):
         self.do_click(self.section, "header_login_nav_link_css")
 

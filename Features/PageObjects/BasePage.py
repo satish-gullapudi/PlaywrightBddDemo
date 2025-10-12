@@ -21,7 +21,9 @@ class BasePage:
         """
         dialog.accept()
 
-    def take_screenshot(self):
+    def take_screenshot(self, screenshot_name=None):
         # Attaches screenshot to allure after every step
+        if screenshot_name is None:
+            screenshot_name='screenshot'
         screenshot = self.page.screenshot()
-        allure.attach(screenshot, name='screenshot', attachment_type=AttachmentType.PNG)
+        allure.attach(screenshot, name=screenshot_name, attachment_type=AttachmentType.PNG)
