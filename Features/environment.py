@@ -152,7 +152,7 @@ def after_all(context):
     context.playwright.stop()
     context.db.close()
 
-def after_step(context):
+def after_step(context, step):
     # Attaches screenshot to allure after every step
     screenshot = context.page.screenshot()
     allure.attach(screenshot, name='screenshot', attachment_type=AttachmentType.PNG)
