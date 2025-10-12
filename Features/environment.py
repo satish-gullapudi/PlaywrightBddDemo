@@ -9,58 +9,20 @@ import logging.config
 import allure
 from allure_commons.types import AttachmentType
 from playwright.sync_api import sync_playwright
-from Utilities import ReadConfig as rc
 from Utilities.DBManager import DBManager
 from Features.PageObjects.BasePage import BasePage
 from Features.PageObjects.LoginPage import LoginPage
 from Features.PageObjects.SignupPage import SignupPage
 from Features.PageObjects.HeaderNav import HeaderNav
+from Features.PageObjects.ContactUsPage import ContactUsPage
+from Utilities.LogUtil import setup_logger
 
-# Define a basic logger configuration
-# This will write logs to a file and/or the console
-LOG_FILE_PATH = os.path.join(str(Path.cwd()), "Logs", 'test_automation.log')
+LOG_DIR = 'Logs'
 
-logging_config = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'standard': {
-            'format': '%(asctime)s [%(levelname)s] (%(name)s) %(message)s',
-            'datefmt': '%Y-%m-%d %H:%M:%S',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'formatter': 'standard',
-            'class': 'logging.StreamHandler',
-        },
-        'file': {
-            'level': 'DEBUG', # Log everything to the file
-            'formatter': 'standard',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOG_FILE_PATH,
-            'maxBytes': 10485760,  # 10 MB
-            'backupCount': 5,
-        },
-    },
-    'loggers': {
-        'automation_logger': { # Custom logger name
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False
-        },
-    }
-}
 def before_all(context):
     """Setup logging and custom context attributes before the test run."""
-
-    # 1. Configure the Python logger
-    logging.config.dictConfig(logging_config)
-
-    # Store the logger instance in the context for easy access
-    context.logger = logging.getLogger('automation_logger')
-    context.logger.info("Test run started. Logging configured.")
+    # Ensure the log directory exists
+    os.makedirs(LOG_DIR, exist_ok=True)
 
     # Load environment variables from .env file
     dotenv_path = ".\\secrets.env"
@@ -73,7 +35,7 @@ def before_all(context):
     context.playwright = sync_playwright().start()
 
     # Create a directory for videos if it doesn't exist
-    context.video_dir = Path("Reports")
+    context.video_dir = Path("VideoReports")
     context.video_dir.mkdir(parents=True, exist_ok=True)
 
     if BROWSER.lower() in ("chrome", "chromium"):
@@ -91,10 +53,18 @@ def before_all(context):
 def before_scenario(context, scenario):
     context.start_time = datetime.now()
 
-    # Define the video path based on the scenario name
-    # Sanitize scenario name for valid filename
+    # Define the video path based on the scenario name and sanitize filename
     sanitized_scenario_name = "".join(c for c in scenario.name if c.isalnum() or c in (' ', '.', '_')).replace(' ', '_')
     context.scenario_video_path = context.video_dir / f"{sanitized_scenario_name}_{datetime.now().strftime("%m_%d_%Y_%H_%M_%S")}.webm"
+
+    # Create the unique log file path
+    log_file_path = os.path.join(LOG_DIR, f"{sanitized_scenario_name}.log")
+
+    # Configure the logger for this specific file path
+    context.logger = setup_logger(log_file_path)
+
+    context.logger.info("-" * 50)
+    context.logger.info(f"STARTING SCENARIO: {scenario.name}")
 
     context.browser = context.browser.new_context(
         record_video_dir=context.video_dir,
@@ -109,7 +79,7 @@ def before_scenario(context, scenario):
     context.lp = LoginPage(context.page)
     context.sp = SignupPage(context.page)
     context.header = HeaderNav(context.page)
-
+    context.contact = ContactUsPage(context.page)
 
 def after_scenario(context, scenario):
     if scenario.status == "failed":
@@ -133,14 +103,6 @@ def after_scenario(context, scenario):
     status = "Passed" if scenario.status == "passed" else "Failed"
     error_message = str(scenario.exception) if scenario.status == "failed" else ""
 
-    screenshot_path = ""
-    if scenario.status == "failed":
-        screenshots_dir = Path("screenshots")
-        screenshots_dir.mkdir(exist_ok=True)
-        screenshot_file = screenshots_dir / f"{scenario.name.replace(' ', '_')}.png"
-        context.page.screenshot(path=str(screenshot_file))
-        screenshot_path = str(screenshot_file)
-
     context.db.log_test_result(
         test_name=scenario_name,
         module=scenario.feature.name,
@@ -148,7 +110,6 @@ def after_scenario(context, scenario):
         start_time=context.start_time,
         end_time = end_time,
         error_message=error_message,
-        screenshot_path=screenshot_path,
         browser="chromium",
         environment=context.environment
     )
@@ -173,19 +134,25 @@ def after_scenario(context, scenario):
     else:
         context.logger.info(f"No video generated or found for scenario '{scenario.name}'.")
 
+    # Log the scenario status
+    context.logger.info(f"SCENARIO FINISHED. {scenario.status}")
+    context.logger.info("-" * 50)
+
+    # Crucial step: Close the file handler to ensure the log file is fully written
+    # and not locked before the next scenario reconfigures the logger.
+    for handler in context.logger.handlers:
+        if isinstance(handler, logging.handlers.RotatingFileHandler):
+            handler.close()
+            context.logger.removeHandler(handler)
+
 
 def after_all(context):
     """Cleanup after the test run."""
-    context.logger.info("Test run finished. Closing log handlers.")
-    # Ensure all file handlers are closed
-    for handler in context.logger.handlers:
-        handler.close()
-
     context.browser.close()
     context.playwright.stop()
     context.db.close()
 
 def after_step(context, step):
-    if step.status == "failed":
-        screenshot = context.page.screenshot()
-        allure.attach(screenshot,name='screenshot',attachment_type=AttachmentType.PNG)
+    # Attaches screenshot to allure after every step
+    screenshot = context.page.screenshot()
+    allure.attach(screenshot, name='screenshot', attachment_type=AttachmentType.PNG)

@@ -1,3 +1,5 @@
+import os
+
 from behave import *
 from playwright.sync_api import expect
 
@@ -20,9 +22,19 @@ def step_impl(context):
 def step_impl(context):
     context.lp.submit_login()
 
+@when(u'I click logout button')
+def step_impl(context):
+    context.header.click_logout()
+
 @then(u'I should be successfully logged in')
 def step_impl(context):
-    expect(context.page.locator(rc("HEADER_NAV_LINKS", "header_logout_nav_link_css"))).to_have_text("Logout")
+    (expect(context.page.locator(rc("HEADER_NAV_LINKS", "header_logged_in_as_username_text_css")))
+     .to_have_text(os.environ.get("USERNAME")))
+
+@then(u'I should navigate to login page')
+def step_impl(context):
+    expect(context.page.locator(rc("HEADER_NAV_LINKS", "header_logged_in_as_username_text_css"))).not_to_be_visible()
+    expect(context.page.locator(rc("HEADER_NAV_LINKS", "header_login_nav_link_css"))).to_be_visible()
 
 @then(u'I should see invalid user error message')
 def step_impl(context):
