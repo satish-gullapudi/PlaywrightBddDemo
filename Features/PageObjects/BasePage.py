@@ -1,3 +1,6 @@
+import allure
+from allure_commons.types import AttachmentType
+
 from Utilities.ReadConfig import readConfig as rc
 
 class BasePage:
@@ -11,3 +14,14 @@ class BasePage:
     def select_dropdown_option_by_visible_text(self, section, key, visible_text):
         ele = self.get_element(section, key)
         ele.select_option(label=visible_text)
+
+    def handle_and_accept_alert(self, dialog):
+        """
+        This function is called when a dialog appears.
+        """
+        dialog.accept()
+
+    def take_screenshot(self):
+        # Attaches screenshot to allure after every step
+        screenshot = self.page.screenshot()
+        allure.attach(screenshot, name='screenshot', attachment_type=AttachmentType.PNG)

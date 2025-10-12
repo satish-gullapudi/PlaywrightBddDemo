@@ -7,9 +7,15 @@ from playwright.sync_api import expect
 from Utilities.ReadConfig import readConfig as rc
 from Utilities import Controller as con
 
-@Given(u'I launch application and go to login page')
+@Given(u'I launch application')
 def step_impl(context):
-    context.page.goto(os.environ.get("BASE_URL"))
+    try:
+        context.page.goto(os.environ.get("BASE_URL"))
+    except TimeoutError:
+        context.page.refresh()
+
+@When(u'Go to login/signup page')
+def step_impl(context):
     context.header.click_header_login_naav_link()
 
 @when(u'I go to signup page and fill all details')
