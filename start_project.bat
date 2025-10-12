@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 :: --- Configuration ---
 set "VENV_DIR_DEFAULT=venv"
@@ -22,8 +22,9 @@ if exist "%VENV_DIR_DEFAULT%" (
 :: 1.b. If neither is found, create the default one ('venv')
 if not defined ACTUAL_VENV_DIR (
     set "ACTUAL_VENV_DIR=%VENV_DIR_DEFAULT%"
-    echo Neither "%VENV_DIR_DEFAULT%" nor "%VENV_DIR_ALT%" found. Creating "%ACTUAL_VENV_DIR%" now...
-    python -m venv "%ACTUAL_VENV_DIR%"
+    :: We use !ACTUAL_VENV_DIR! inside this IF block because it was SET inside this block.
+    echo Neither "%VENV_DIR_DEFAULT%" nor "%VENV_DIR_ALT%" found. Creating "!ACTUAL_VENV_DIR!" now...
+    python -m venv "!ACTUAL_VENV_DIR!"
     if errorlevel 1 (
         echo ERROR: Failed to create virtual environment. Ensure Python is installed and accessible.
         goto :end
@@ -56,7 +57,18 @@ echo.
 
 :: 4. Run the main.py file using streamlit
 echo Starting Streamlit application...
-:: Using the full path to the executable is the most reliable way in a batch script
+
+:: CRITICAL STEP: Set the environment variable for the child process.
+:: We use the variable set earlier for the venv path.
+:: Set the variable WITHOUT quotes around the path.
+set VENV_PYTHON_EXE_PATH=%ACTUAL_VENV_DIR%\Scripts\python.exe
+
+:: DEBUG CHECK: Verify the variable is set using both methods.
+:: If this prints the correct path, the variable is set successfully.
+echo VENV_PYTHON_EXE_PATH set to: "!VENV_PYTHON_EXE_PATH!" (Delayed)
+echo VENV_PYTHON_EXE_PATH set to: "%VENV_PYTHON_EXE_PATH%" (Immediate)
+
+:: Run Streamlit. The Streamlit process should inherit the environment variable set above.
 "%ACTUAL_VENV_DIR%\Scripts\streamlit.exe" run "%MAIN_SCRIPT%"
 echo "%ACTUAL_VENV_DIR%\Scripts\streamlit.exe" run "%MAIN_SCRIPT%"
 pause
