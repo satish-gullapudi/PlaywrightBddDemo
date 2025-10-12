@@ -1,5 +1,0 @@
-2025-10-12 07:28:52 [INFO] (automation_logger) --------------------------------------------------
-2025-10-12 07:28:52 [INFO] (automation_logger) STARTING SCENARIO: Logout user
-2025-10-12 07:29:00 [INFO] (automation_logger) Video saved for scenario 'Logout user': C:\Users\SatishKumar\OneDrive - Paktolus Solutions - HigherL LLC\Documents\GitHub\PlaywrightBddDemo\Reports\Logout_user_10_12_2025_07_28_52.webm
-2025-10-12 07:29:00 [INFO] (automation_logger) SCENARIO FINISHED. Status.failed
-2025-10-12 07:29:00 [INFO] (automation_logger) --------------------------------------------------

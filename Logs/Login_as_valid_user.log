@@ -1,5 +1,0 @@
-2025-10-12 07:28:37 [INFO] (automation_logger) --------------------------------------------------
-2025-10-12 07:28:37 [INFO] (automation_logger) STARTING SCENARIO: Login as valid user
-2025-10-12 07:28:44 [INFO] (automation_logger) Video saved for scenario 'Login as valid user': C:\Users\SatishKumar\OneDrive - Paktolus Solutions - HigherL LLC\Documents\GitHub\PlaywrightBddDemo\Reports\Login_as_valid_user_10_12_2025_07_28_37.webm
-2025-10-12 07:28:44 [INFO] (automation_logger) SCENARIO FINISHED. Status.failed
-2025-10-12 07:28:44 [INFO] (automation_logger) --------------------------------------------------

@@ -4,6 +4,7 @@ import streamlit as st
 import pandas as pd
 from Utilities.DBManager import DBManager
 
+# Initiating DB object for fetching tests and writing test results
 db = DBManager()
 conn, cursor = db.conn, db.cursor
 
@@ -48,9 +49,8 @@ def run_behave_test(feature_path, scenario_name):
         return "Fail"
 
     try:
-        # Use the absolute path to the virtual environment's python.exe
         command_list = [
-            VENV_PYTHON_EXE,  # <-- Use the correct Python executable
+            VENV_PYTHON_EXE,
             "-m", "behave",
             feature_path,
             "--name", scenario_name
@@ -83,29 +83,98 @@ def run_behave_test(feature_path, scenario_name):
         print(f"Critical Exception running behave test: {e}")
         return "Fail"
 
+
+# --- Streamlit UI and Logic ---
+
 st.title("🧪 Behave Test Runner Dashboard")
+
+
+# 4. Cancel and Close Function
+def close_app():
+    st.success("Closing Streamlit application...")
+    # os._exit(0) forcefully terminates the Python process, shutting down Streamlit
+    os._exit(0)
+
+
+# Initialize session state for test selections if not present
+if 'test_selections' not in st.session_state:
+    st.session_state.test_selections = {}
 
 test_options = get_tests()
 if not test_options:
     st.warning("No tests available.")
 else:
-    selected = st.multiselect(
-        "Select scenarios to run",
-        options=test_options,
-        format_func=lambda x: x[1]
-    )
+    st.subheader("Select scenarios to run")
 
-    if st.button("Run Selected Scenarios"):
-        with st.spinner("Running selected scenarios..."):
-            for test_id, scenario_name in selected:
-                feature_path = find_feature_file_by_scenario_name(scenario_name)
-                if feature_path:
-                    update_run_status(test_id, "Running", "...")
-                    result = run_behave_test(feature_path, scenario_name)
-                    update_run_status(test_id, "Run", result)
-                else:
-                    update_run_status(test_id, "Skipped", "Feature Not Found")
-            st.success("Behave tests completed.")
+
+    # 3. Select All / Unselect All Functions
+    def select_all():
+        # Loop through all test options and set the CHECKBOX key state to True
+        for test_id, test_name in test_options:
+            st.session_state[f"checkbox_{test_id}"] = True
+
+
+    def unselect_all():
+        # Loop through all test options and set the CHECKBOX key state to False
+        for test_id, test_name in test_options:
+            st.session_state[f"checkbox_{test_id}"] = False
+
+
+    # Select All / Unselect All Buttons
+    col_select_all, col_unselect_all = st.columns(2)
+    with col_select_all:
+        st.button("Select All", on_click=select_all)
+    with col_unselect_all:
+        st.button("Unselect All", on_click=unselect_all)
+
+    st.markdown("---")
+
+    selected_scenarios = []
+
+    # 1 & 2. Checkboxes for Scenario-Specific Listing
+    for test_id, scenario_name in test_options:
+        # Initialize session state value for the selection status
+        if test_id not in st.session_state.test_selections:
+            st.session_state.test_selections[test_id] = False
+
+        # Create checkbox, using the test_id as the key in session state
+        is_selected = st.checkbox(
+            f"**{scenario_name}**",  # Scenario-specific name
+            value=st.session_state.test_selections[test_id],
+            key=f"checkbox_{test_id}"  # Unique key for the Streamlit widget
+        )
+
+        # Update selection status in session state
+        st.session_state.test_selections[test_id] = is_selected
+
+        if is_selected:
+            selected_scenarios.append((test_id, scenario_name))
+
+    st.markdown("---")
+
+    # Run and Cancel Buttons Side-by-Side
+    col_run, col_cancel = st.columns([3, 1])
+
+    with col_run:
+        if st.button(f"Run {len(selected_scenarios)} Selected Scenarios", type="primary"):
+            if not selected_scenarios:
+                st.warning("Please select at least one scenario to run.")
+            else:
+                with st.spinner("Running selected scenarios..."):
+                    for test_id, scenario_name in selected_scenarios:
+                        feature_path = find_feature_file_by_scenario_name(scenario_name)
+                        if feature_path:
+                            update_run_status(test_id, "Running", "...")
+                            result = run_behave_test(feature_path, scenario_name)
+                            update_run_status(test_id, "Run", result)
+                        else:
+                            update_run_status(test_id, "Skipped", "Feature Not Found")
+                    st.success("Behave tests completed.")
+
+    with col_cancel:
+        # 4. Cancel and Close Button
+        if st.button("Cancel and Close"):
+            close_app()
 
     # Show updated table
     st.subheader("📋 Current Test Table")
