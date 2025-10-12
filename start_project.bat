@@ -38,7 +38,6 @@ call "%ACTUAL_VENV_DIR%\Scripts\activate.bat"
 :: The prompt changes to (venv) or (.venv), satisfying requirement #2.
 
 echo.
-echo Checking for dependencies...
 
 :: 3. Install dependencies from requirements.txt
 if exist "%REQUIREMENTS_FILE%" (
@@ -57,7 +56,10 @@ echo.
 
 :: 4. Run the main.py file using streamlit
 echo Starting Streamlit application...
-streamlit run "%MAIN_SCRIPT%"
+:: Using the full path to the executable is the most reliable way in a batch script
+"%ACTUAL_VENV_DIR%\Scripts\streamlit.exe" run "%MAIN_SCRIPT%"
+echo "%ACTUAL_VENV_DIR%\Scripts\streamlit.exe" run "%MAIN_SCRIPT%"
+pause
 
 
 :: --- Cleanup ---
