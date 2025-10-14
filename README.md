@@ -26,7 +26,7 @@ The project is designed to be self-sufficient. You only need a recent Python ins
 
 ### Prerequisites
 
-1.  **Python:** Ensure you have the latest version of Python installed.
+1.  **Python:** Ensure you have the Python 3.13.0 installed.
 2.  **SQLite:** This is Optional, to view the content of the dedicated database created for the project.
 
 ### Execution
