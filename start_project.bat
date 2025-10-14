@@ -41,9 +41,14 @@ call "%ACTUAL_VENV_DIR%\Scripts\activate.bat"
 echo.
 
 :: 3. Install dependencies from requirements.txt
+
+:: Optional step to update pip/setuptools before installation
+echo Updating pip and setuptools...
+"%ACTUAL_VENV_DIR%\Scripts\python.exe" -m pip install --upgrade pip setuptools wheel
+
 if exist "%REQUIREMENTS_FILE%" (
     echo Installing/Updating dependencies from "%REQUIREMENTS_FILE%"...
-    "%ACTUAL_VENV_DIR%\Scripts\python.exe" -m pip install -r "%REQUIREMENTS_FILE%"
+    "%ACTUAL_VENV_DIR%\Scripts\python.exe" -m pip install --only-binary :all: -r "%REQUIREMENTS_FILE%"
     if errorlevel 1 (
         echo ERROR: Failed to install dependencies. Check %REQUIREMENTS_FILE%.
         goto :deactivate_and_end
