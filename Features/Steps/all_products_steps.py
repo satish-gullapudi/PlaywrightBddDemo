@@ -1,10 +1,11 @@
+import json
 import os
+import time
 
 from behave import *
 from playwright.sync_api import expect
 
 from Utilities.ReadConfig import readConfig as rc
-from Utilities import Controller as con
 
 @when(u'Go to all products page')
 def step_impl(context):
@@ -16,24 +17,34 @@ def step_impl(context):
 
 @then(u'Products list is visible')
 def step_impl(context):
+    api = os.environ.get("PRODUCT_LIST_API")
+
+    # Opening new tab to get list of products from API
+    browser_context = context.page.context
+    new_page = browser_context.new_page()
+    new_page.goto(api)
+    resp = new_page.locator('//body').text_content()
+    new_page.close()
+    resp = json.loads(resp.strip())
+    context.product_detail_list = resp["products"]
+
     product_name = context.page.locator(rc(context.products.section, "products_individual_card_produce_name_css"))
-    expected_product_count = 33
-    try:
-        expect(product_name).to_have_count(expected_product_count)
-    except AssertionError as e:
-        context.bp.take_screenshot(f"Expected product count not matches actual")
-        context.failed_assertions_count += 1
+    expect(product_name).to_have_count(len(context.product_detail_list))
 
 @when(u'I click on view product of first product')
 def step_impl(context):
-    raise NotImplementedError(u'STEP: When I click on view product of first product')
-
+    view_product_cta_locator = rc(context.products.section, "products_individual_card_view_product_cta_css")
+    context.page.locator(view_product_cta_locator).first.click()
 
 @then(u'I should be landed on product detail page')
 def step_impl(context):
-    raise NotImplementedError(u'STEP: Then I should be landed on product detail page')
-
+    expect(context.page.locator('b:has-text("Availability:")')).to_be_visible()
 
 @then(u'Product detail is visible')
 def step_impl(context):
-    raise NotImplementedError(u'STEP: Then Product detail is visible')
+    prod_name = context.product_detail_list[0].get("name")
+    prod_price = context.product_detail_list[0].get("price")
+    prod_brand = context.product_detail_list[0].get("brand")
+    expect(context.page.locator(f'h2:has-text("{prod_name}")')).to_be_visible()
+    expect(context.page.locator(f"//span[normalize-space()='{prod_price}']")).to_be_visible()
+    expect(context.page.locator(f'p:has-text("Brand: {prod_brand}")')).to_be_visible()

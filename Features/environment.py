@@ -83,16 +83,7 @@ def before_scenario(context, scenario):
     context.contact = ContactUsPage(context.page)
     context.products = AllProducts(context.page)
 
-    # Declaring global variable to handle soft assertions
-    # Use this variable in the step definitions by adding count 1
-    # To continue test even test fails
-    context.failed_assertions_count = 0
-
 def after_scenario(context, scenario):
-    # Check for soft assertion failures after the scenario has finished
-    if context.failed_assertions_count != 0:
-        raise AssertionError("Failed to have all assertions succeed...")
-
     if scenario.status == "failed":
         # Check if the Playwright page object is available in the context
         if 'page' in context:

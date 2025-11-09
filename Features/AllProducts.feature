@@ -9,6 +9,6 @@ Feature: All Products Feature
 
     Then I should be navigated to ALL PRODUCTS page successfully
     And Products list is visible
-#    When I click on view product of first product
-#    Then I should be landed on product detail page
-#    And Product detail is visible
+    When I click on view product of first product
+    Then I should be landed on product detail page
+    And Product detail is visible
