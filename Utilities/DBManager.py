@@ -23,7 +23,6 @@ class DBManager:
                 end_time TEXT,
                 elapsed_time TEXT,
                 error_message TEXT,
-                screenshot_path TEXT,
                 browser TEXT,
                 environment TEXT
             )
@@ -46,7 +45,6 @@ class DBManager:
         start_time,
         end_time,
         error_message: str = "",
-        screenshot_path: str = "",
         browser: str = "chrome",
         environment: str = "QA"
     ):
@@ -56,13 +54,13 @@ class DBManager:
             self.cursor.execute('''
                 INSERT INTO test_results (
                     test_name, module, status, start_time, end_time, elapsed_time,
-                    error_message, screenshot_path, browser, environment
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    error_message, browser, environment
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 test_name, module, status,
                 start_time.strftime('%Y-%m-%d %H:%M:%S'),
                 end_time.strftime('%Y-%m-%d %H:%M:%S'),
-                elapsed, error_message, screenshot_path, browser, environment
+                elapsed, error_message, browser, environment
             ))
 
             self.update_test_status(test_name, run_status="Run", result_status=status)

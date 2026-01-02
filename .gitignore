@@ -3,3 +3,8 @@
 /allure-results
 /Rough
 /secrets.env
+/AI_automation_framework/secrets.env
+/VideoReports/
+/Logs/
+/automation_results.db
+/trace.zip
