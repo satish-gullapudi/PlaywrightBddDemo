@@ -48,7 +48,7 @@ def before_all(context):
         context.browser = context.playwright.firefox.launch(headless=False)
     else:
         raise Exception(f"Unsupported browser: {BROWSER}")
-    context.environment = "QA"
+    context.environment = "DEV"
 
 
 def before_scenario(context, scenario):
