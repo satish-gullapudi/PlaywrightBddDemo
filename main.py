@@ -3,10 +3,66 @@ import subprocess
 import streamlit as st
 import pandas as pd
 from Utilities.DBManager import DBManager
+import re
 
 # Initiating DB object for fetching tests and writing test results
 db = DBManager()
 conn, cursor = db.conn, db.cursor
+
+def sync_features_to_db():
+    existing_set = set(test_name for _, test_name in get_tests())
+    root_dir = "./Features"
+    discovered_scenarios = []
+
+    for root, _, files in os.walk(root_dir):
+        for file in files:
+            if file.endswith(".feature"):
+                path = os.path.join(root, file)
+                with open(path, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+                    # Split by Scenario to handle outlines and examples together
+                    sections = re.split(r'\n\s*(Scenario:|Scenario Outline:)', content)
+
+                    for i in range(1, len(sections), 2):
+                        keyword = sections[i].strip()
+                        body = sections[i + 1]
+
+                        # Get the title (first line of the body)
+                        lines = body.strip().split('\n')
+                        title = lines[0].strip()
+
+                        if keyword == "Scenario:":
+                            discovered_scenarios.append(title)
+
+                        elif keyword == "Scenario Outline:":
+                            # Find the Examples table
+                            if "Examples:" in body:
+                                table_part = body.split("Examples:")[1].strip()
+                                table_lines = [l.strip() for l in table_part.split('\n') if '|' in l]
+
+                                if len(table_lines) > 1:
+                                    headers = [h.strip() for h in table_lines[0].split('|') if h.strip()]
+                                    rows = table_lines[1:]
+
+                                    for row in rows:
+                                        values = [v.strip() for v in row.split('|') if v.strip()]
+                                        # Map header names to row values
+                                        row_data = dict(zip(headers, values))
+
+                                        # Replace <placeholder> with actual value
+                                        expanded_name = title
+                                        for key, val in row_data.items():
+                                            expanded_name = expanded_name.replace(f"<{key}>", val)
+
+                                        # Only add to the list if the placeholders have been replaced
+                                        if "<" not in expanded_name and ">" not in expanded_name:
+                                            discovered_scenarios.append(expanded_name)
+
+    # Sync to DB (Optimized with set)
+    for scenario in discovered_scenarios:
+        if scenario not in existing_set:
+            db.update_test_status(scenario, "Not Run", "None")
 
 def get_tests():
     cursor.execute("SELECT id, test_name FROM tests")
@@ -35,7 +91,7 @@ def find_feature_file_by_scenario_name(scenario_name, root_dir="./Features"):
                         return path
     return None
 
-def run_behave_test(feature_path, scenario_name):
+def run_behave_test(feature_path, scenario_name, headless=True):
     # Get the absolute path to the virtual environment's python.exe
     # This variable was set in start_project.bat
     VENV_PYTHON_EXE = os.environ.get("VENV_PYTHON_EXE_PATH")
@@ -48,12 +104,16 @@ def run_behave_test(feature_path, scenario_name):
         print("ERROR: Could not find virtual environment Python executable.")
         return "Fail"
 
+    # Convert boolean to string for command line
+    headless_str = "true" if headless else "false"
+
     try:
         command_list = [
             VENV_PYTHON_EXE,
             "-m", "behave",
             feature_path,
-            "--name", scenario_name
+            "--name", scenario_name,
+            "-D", f"headless={headless_str}"
         ]
 
         result = subprocess.run(
@@ -85,6 +145,7 @@ def run_behave_test(feature_path, scenario_name):
 
 
 # --- Streamlit UI and Logic ---
+sync_features_to_db()
 
 st.title("🧪 Behave Test Runner Dashboard")
 
@@ -152,29 +213,50 @@ else:
 
     st.markdown("---")
 
-    # Run and Cancel Buttons Side-by-Side
-    col_run, col_cancel = st.columns([3, 1])
+    with st.sidebar:
+        st.title("Test Execution Manager")
 
-    with col_run:
+        headless_mode = st.checkbox("Run in Headless Mode", value=True)
+        # Run and Cancel Buttons Side-by-Side
+        # col_run, col_cancel = st.columns([3, 1])
+
+        # with col_run:
         if st.button(f"Run {len(selected_scenarios)} Selected Scenarios", type="primary"):
-            if not selected_scenarios:
-                st.warning("Please select at least one scenario to run.")
-            else:
-                with st.spinner("Running selected scenarios..."):
-                    for test_id, scenario_name in selected_scenarios:
-                        feature_path = find_feature_file_by_scenario_name(scenario_name)
-                        if feature_path:
-                            update_run_status(test_id, "Running", "...")
-                            result = run_behave_test(feature_path, scenario_name)
-                            update_run_status(test_id, "Run", result)
-                        else:
-                            update_run_status(test_id, "Skipped", "Feature Not Found")
-                    st.success("Behave tests completed.")
+                if not selected_scenarios:
+                    st.warning("Please select at least one scenario to run.")
+                else:
+                    with st.spinner("Running selected scenarios..."):
+                        for test_id, scenario_name in selected_scenarios:
+                            feature_path = find_feature_file_by_scenario_name(scenario_name)
+                            if feature_path:
+                                update_run_status(test_id, "Running", "...")
+                                result = run_behave_test(feature_path, scenario_name, headless_mode)
+                                update_run_status(test_id, "Run", result)
+                            else:
+                                update_run_status(test_id, "Skipped", "Feature Not Found")
+                        st.success("Behave tests completed.")
 
-    with col_cancel:
+        # with col_cancel:
         # 4. Cancel and Close Button
         if st.button("Cancel and Close"):
             close_app()
+
+        st.title("Allure Report Manager")
+
+        if st.button("Start Allure Server"):
+            # Start the process and save it to session state
+            proc = subprocess.Popen(["allure", "serve", "allure-results"], shell=True)
+            st.session_state['allure_proc'] = proc
+            st.success("Server started!")
+
+        if st.button("Stop Allure Server (Ctrl+C)"):
+            if 'allure_proc' in st.session_state:
+                # This is the equivalent of hitting Ctrl+C
+                st.session_state['allure_proc'].terminate()
+                del st.session_state['allure_proc']
+                st.warning("Server stopped.")
+            else:
+                st.error("No server is currently running.")
 
     # Show updated table
     st.subheader("📋 Current Test Table")

@@ -76,6 +76,20 @@ def before_scenario(context, scenario):
     context.browser.tracing.start(screenshots=True, snapshots=True, sources=True)
 
     context.page = context.browser.new_page()
+
+    # Block a wider range of ad-related domains and patterns
+    ad_patterns = [
+        "**/googleads.g.doubleclick.net/**",
+        "**/pagead2.googlesyndication.com/**",
+        "**/tpc.googlesyndication.com/**",
+        "**/adservice.google.com/**",
+        "**/*adsbygoogle*",
+        "**/*vignette*"
+    ]
+
+    for pattern in ad_patterns:
+        context.page.route(pattern, lambda route: route.abort())
+
     context.bp = BasePage(context.page)
     context.lp = LoginPage(context.page)
     context.sp = SignupPage(context.page)

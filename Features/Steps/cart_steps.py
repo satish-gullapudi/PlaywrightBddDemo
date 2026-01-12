@@ -2,6 +2,20 @@ from behave import *
 from playwright.sync_api import expect
 
 
+@when(u'I click proceed to checkout button')
+def step_impl(context):
+    context.page.locator("a:has-text('Proceed To Checkout')").click()
+
+
+@then(u'I should see checkout popup asking register or login to checkout')
+def step_impl(context):
+    expect(context.page.get_by_text("Register / Login account to proceed on checkout.")).to_be_visible()
+
+
+@when(u'I click Register/Login button')
+def step_impl(context):
+    context.page.get_by_text("Register / Login", exact=True).click()
+
 @then(u'"{product1}" and "{product2}" are added to Cart')
 def step_impl(context, product1, product2):
     expect(context.page.get_by_role("link", name=product1)).to_be_visible()
