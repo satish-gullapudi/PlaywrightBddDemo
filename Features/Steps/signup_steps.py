@@ -39,7 +39,7 @@ def step_impl(context):
     context.test_signup_data["state"] = context.sp.signup_enter_state()
     context.test_signup_data["city"] = context.sp.signup_enter_city()
     context.test_signup_data["zipcode"] = context.sp.signup_enter_zipcode()
-    context.sp.signup_enter_mobile_number()
+    context.test_signup_data["phone"] = str(context.sp.signup_enter_mobile_number())
     print(context.test_signup_data)
 
 @when(u'I signup with existing user details')
@@ -67,10 +67,16 @@ def step_impl(context):
 def step_impl(context):
     new_user_email = context.test_signup_data.get("email")
     api = f"{os.environ.get("user_detail_api")}{new_user_email}"
-    context.page.goto(api)
-    resp = context.page.locator('//body').text_content()
+
+    # Opening new tab to get user details
+    browser_context = context.page.context
+    new_page = browser_context.new_page()
+    new_page.goto(api)
+    resp = new_page.locator('//body').text_content()
+    new_page.close()
     resp = json.loads(resp.strip())
     context.new_user_detail = resp["user"]
+    print(context.new_user_detail)
 
 @then(u'New user details should be found')
 def step_impl(context):
@@ -113,10 +119,29 @@ def step_impl(context):
     if not mismatches:
         context.logger.info("✅ Validation successful! All matching keys have identical values.")
     else:
-        context.logger.error("\n❌ Validation failed. Mismatches found:")
+        context.logger.error("\n Validation failed. Mismatches found:")
         for key, details in mismatches.items():
             if isinstance(details, dict):
                 context.logger.error(
                     f"  Key '{key}': VALUE MISMATCH (Expected: '{details['expected']}', Actual: '{details['actual']}')")
             else:
                 context.logger.info(f"  Key '{key}': {details}")
+
+@when(u'I click Continue in account creation page')
+def step_impl(context):
+    context.page.locator(rc("SIGNUP_PAGE", "signup_create_account_continue_btn_css")).click()
+
+@then (u"Verify Logged in as username at top")
+def step_impl(context):
+    new_user = context.test_signup_data.get("name")
+    expect(context.page.locator("ul[class='nav navbar-nav'] li a b")).to_have_text(new_user)
+
+@when (u"I Click Delete Account button")
+def step_impl(context):
+    context.page.get_by_role("link", name="Delete Account").click()
+
+@then (u"Verify ACCOUNT DELETED! and click Continue button")
+def step_impl(context):
+    expect(context.page.get_by_text("Your account has been permanently deleted!", exact=True)).to_be_visible()
+    context.page.get_by_role("link", name="Continue").click()
+
