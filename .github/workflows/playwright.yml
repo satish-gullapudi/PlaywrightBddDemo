@@ -34,11 +34,16 @@ jobs:
       if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: playwright install chromium --with-deps
 
+    - name: List files for debugging
+      run: |
+        pwd
+        find . -maxdepth 2 -not -path '*/.*'
+
     - name: Run Playwright BDD tests
       run: |
         mkdir -p GithubReports
-        # Use --junit and --junit-directory instead of -f junit
-        behave Features/Login.feature --junit --junit-directory VideoReports/
+        # Running behave while explicitly pointing to the Features directory
+        behave Features/Login.feature --junit --junit-directory GithubReports/
 
     - name: Upload Test Reports
       if: always()
