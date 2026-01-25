@@ -37,13 +37,13 @@ jobs:
     - name: Run Playwright BDD tests
       run: |
         mkdir -p VideoReports
-        # Pass the specific path to your feature file
-        behave features/Login.feature -f junit -o VideoReports/
+        # Use --junit and --junit-directory instead of -f junit
+        behave features/Login.feature --junit --junit-directory VideoReports/
 
     - name: Upload Test Reports
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: behave-playwright-reports
-        path: VideoReports/  # Ensure this matches your record_video_dir
+        path: GithubReports/  # Ensure this matches your record_video_dir
         retention-days: 30
