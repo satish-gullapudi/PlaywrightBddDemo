@@ -38,7 +38,7 @@ jobs:
       run: |
         mkdir -p VideoReports
         # Use --junit and --junit-directory instead of -f junit
-        behave features/Login.feature --junit --junit-directory VideoReports/
+        behave Features/Login.feature --junit --junit-directory VideoReports/
 
     - name: Upload Test Reports
       if: always()
