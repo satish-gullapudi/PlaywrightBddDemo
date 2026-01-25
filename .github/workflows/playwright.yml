@@ -28,7 +28,8 @@ jobs:
     - name: Run Playwright BDD tests
       run: |
         mkdir -p VideoReports
-        behave -f junit -o VideoReports/ 
+        # Pass the specific path to your feature file
+        behave features/Login.feature -f junit -o VideoReports/
 
     - name: Upload Test Reports
       if: always()
