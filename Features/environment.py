@@ -58,7 +58,9 @@ def before_scenario(context, scenario):
 
     # Define the video path based on the scenario name and sanitize filename
     sanitized_scenario_name = "".join(c for c in scenario.name if c.isalnum() or c in (' ', '.', '_')).replace(' ', '_')
-    context.scenario_video_path = context.video_dir / f"{sanitized_scenario_name}_{datetime.now().strftime("%m_%d_%Y_%H_%M_%S")}.webm"
+    timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+    filename = f"{sanitized_scenario_name}_{timestamp}.webm"
+    context.scenario_video_path = context.video_dir / filename
 
     # Create the unique log file path
     log_file_path = os.path.join(LOG_DIR, f"{sanitized_scenario_name}.log")

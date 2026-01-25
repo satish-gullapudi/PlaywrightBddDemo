@@ -36,7 +36,7 @@ jobs:
 
     - name: Run Playwright BDD tests
       run: |
-        mkdir -p VideoReports
+        mkdir -p GithubReports
         # Use --junit and --junit-directory instead of -f junit
         behave Features/Login.feature --junit --junit-directory VideoReports/
 
