@@ -43,7 +43,7 @@ jobs:
       run: |
         mkdir -p GithubReports
         # Running behave while explicitly pointing to the Features directory
-        behave Features/Login.feature --junit --junit-directory GithubReports/
+        behave Features/Login.feature --define steps_dir=Features/Steps --junit --junit-directory GithubReports/
 
     - name: Upload Test Reports
       if: always()
