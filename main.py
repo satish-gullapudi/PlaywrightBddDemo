@@ -1,9 +1,14 @@
 import os
 import subprocess
+import sys
+
 import streamlit as st
 import pandas as pd
 from Utilities.DBManager import DBManager
+from Utilities import Controller as con
 import re
+
+IS_DOCKER = con.init_env() # LOADING ENVIRONMENT VARIABLES
 
 # Initiating DB object for fetching tests and writing test results
 db = DBManager()
@@ -94,7 +99,7 @@ def find_feature_file_by_scenario_name(scenario_name, root_dir="./Features"):
 def run_behave_test(feature_path, scenario_name, headless=True):
     # Get the absolute path to the virtual environment's python.exe
     # This variable was set in start_project.bat
-    VENV_PYTHON_EXE = os.environ.get("VENV_PYTHON_EXE_PATH")
+    VENV_PYTHON_EXE = sys.executable if IS_DOCKER else os.environ.get("VENV_PYTHON_EXE_PATH")
 
     # Strip surrounding quotes if the batch script added them
     if VENV_PYTHON_EXE:
@@ -104,16 +109,13 @@ def run_behave_test(feature_path, scenario_name, headless=True):
         print("ERROR: Could not find virtual environment Python executable.")
         return "Fail"
 
-    # Convert boolean to string for command line
-    headless_str = "true" if headless else "false"
-
     try:
         command_list = [
             VENV_PYTHON_EXE,
             "-m", "behave",
             feature_path,
             "--name", scenario_name,
-            "-D", f"headless={headless_str}"
+            "-D", f"headless={"true" if headless else "false"}"
         ]
 
         result = subprocess.run(
@@ -216,38 +218,50 @@ else:
     with st.sidebar:
         st.title("Test Execution Manager")
 
-        headless_mode = st.checkbox("Run in Headless Mode", value=True)
-        # Run and Cancel Buttons Side-by-Side
-        # col_run, col_cancel = st.columns([3, 1])
+        if IS_DOCKER:
+            headless_mode = True
+        else:
+            headless_mode = os.getenv("HEADLESS").lower()
 
-        # with col_run:
         if st.button(f"Run {len(selected_scenarios)} Selected Scenarios", type="primary"):
-                if not selected_scenarios:
-                    st.warning("Please select at least one scenario to run.")
-                else:
-                    with st.spinner("Running selected scenarios..."):
-                        for test_id, scenario_name in selected_scenarios:
-                            feature_path = find_feature_file_by_scenario_name(scenario_name)
-                            if feature_path:
-                                update_run_status(test_id, "Running", "...")
-                                result = run_behave_test(feature_path, scenario_name, headless_mode)
-                                update_run_status(test_id, "Run", result)
-                            else:
-                                update_run_status(test_id, "Skipped", "Feature Not Found")
-                        st.success("Behave tests completed.")
+            if not selected_scenarios:
+                st.warning("Please select at least one scenario to run.")
+            else:
+                with st.spinner("Running selected scenarios..."):
+                    for test_id, scenario_name in selected_scenarios:
+                        feature_path = find_feature_file_by_scenario_name(scenario_name)
+                        if feature_path:
+                            update_run_status(test_id, "Running", "...")
+                            result = run_behave_test(feature_path, scenario_name, headless_mode)
+                            update_run_status(test_id, "Run", result)
+                        else:
+                            update_run_status(test_id, "Skipped", "Feature Not Found")
+                    st.success("Behave tests completed.")
 
-        # with col_cancel:
-        # 4. Cancel and Close Button
         if st.button("Cancel and Close"):
             close_app()
 
         st.title("Allure Report Manager")
 
         if st.button("Start Allure Server"):
-            # Start the process and save it to session state
-            proc = subprocess.Popen(["allure", "serve", "allure-results"], shell=True)
-            st.session_state['allure_proc'] = proc
-            st.success("Server started!")
+            if IS_DOCKER:
+                cmd = ["allure", "serve", "allure-results"]
+
+                if os.getenv("DOCKER") == "True":
+                    # Specific requirements for Docker networking
+                    cmd.extend(["--host", "0.0.0.0", "--port", "8080"])
+
+                # Use list-style Popen without shell=True for Linux/Docker
+                proc = subprocess.Popen(cmd, shell=(os.name == 'nt'))
+                st.session_state['allure_proc'] = proc
+
+                url = "http://localhost:8080" if IS_DOCKER else "a local port"
+                st.success(f"Allure Server started! View it at {url}")
+            else:
+                # Start the process and save it to session state
+                proc = subprocess.Popen(["allure", "serve", "allure-results"], shell=True)
+                st.session_state['allure_proc'] = proc
+                st.success("Server started!")
 
         if st.button("Stop Allure Server (Ctrl+C)"):
             if 'allure_proc' in st.session_state:

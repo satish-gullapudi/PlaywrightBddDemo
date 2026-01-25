@@ -1,6 +1,9 @@
+import os
 import random
 import string
 from datetime import date, timedelta, datetime
+from pathlib import Path
+from dotenv import load_dotenv
 
 
 def generate_secure_password(length):
@@ -88,3 +91,29 @@ def get_numeric_month_string(month_name):
     except ValueError:
         # Handle cases where the month_name is invalid or already numeric
         return str(month_name)  # Return as is if conversion fails
+
+
+def init_env():
+    # Find project root regardless of where this script is called from
+    base_dir = Path(__file__).resolve().parent.parent
+    env_path = base_dir / "secrets.env"
+
+    if env_path.exists():
+        load_dotenv(dotenv_path=env_path)
+        print("ENV file loaded...")
+
+    # Return a simple flag for easy checking elsewhere
+    return os.getenv("DOCKER") == "True" or os.path.exists('/.dockerenv')
+
+def block_ads(page):
+    # Block a wider range of ad-related domains and patterns
+    ad_patterns = [
+        "**/googleads.g.doubleclick.net/**",
+        "**/pagead2.googlesyndication.com/**",
+        "**/tpc.googlesyndication.com/**",
+        "**/adservice.google.com/**",
+        "**/*adsbygoogle*",
+        "**/*vignette*"
+    ]
+    for pattern in ad_patterns:
+        page.route(pattern, lambda route: route.abort())

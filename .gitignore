@@ -1,5 +1,6 @@
 /.idea
 *.pyc
+*/__pycache__
 /allure-results
 /Rough
 /secrets.env
