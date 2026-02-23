@@ -16,7 +16,7 @@ conn, cursor = db.conn, db.cursor
 
 def sync_features_to_db():
     existing_set = set(test_name for _, test_name in get_tests())
-    root_dir = "./Features"
+    root_dir = "features"
     discovered_scenarios = []
 
     for root, _, files in os.walk(root_dir):
@@ -82,7 +82,7 @@ def update_run_status(test_id, run_status, result_status):
     """, (run_status, result_status, test_id))
     conn.commit()
 
-def find_feature_file_by_scenario_name(scenario_name, root_dir="./Features"):
+def find_feature_file_by_scenario_name(scenario_name, root_dir="./features"):
     """
     Search for a .feature file that contains the given scenario name.
     """

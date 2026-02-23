@@ -2,7 +2,7 @@ name: Playwright BDD Tests
 on:
   push:
     branches: [ main, develop ]
-    
+
   pull_request:
     branches: [ main, develop ]
 
@@ -29,7 +29,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/ms-playwright
-        key: ${{ runner.os }}-playwright-${{ steps.setup-python.outputs.python-version }}
+        key: ${{ runner.os }}-playwright-${{ hashFiles('**/requirements.txt') }}
 
     - name: Install Playwright Browsers
       if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -44,7 +44,7 @@ jobs:
       run: |
         mkdir -p GithubReports
         # Running behave while explicitly pointing to the Features directory
-        behave Features/Login.feature --define steps_dir=Features/Steps --junit --junit-directory GithubReports/
+        behave Features/Login.feature --define steps_dir=features/steps --junit --junit-directory GithubReports/
 
     - name: Upload Test Reports
       if: always()

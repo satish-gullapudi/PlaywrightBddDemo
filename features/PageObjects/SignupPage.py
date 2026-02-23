@@ -1,7 +1,7 @@
 import os
 import random
 
-from Features.PageObjects.BasePage import BasePage
+from features.PageObjects.BasePage import BasePage
 from Utilities import Controller as con
 
 

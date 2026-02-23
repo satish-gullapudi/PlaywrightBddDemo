@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from Features.PageObjects.BasePage import BasePage
+from features.PageObjects.BasePage import BasePage
 from Utilities import Controller as con
 from Utilities.ReadConfig import readConfig as rc
 

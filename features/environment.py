@@ -10,13 +10,13 @@ from allure_commons.types import AttachmentType
 from playwright.sync_api import sync_playwright
 from Utilities.DBManager import DBManager
 from Utilities import Controller as con
-from Features.PageObjects.BasePage import BasePage
-from Features.PageObjects.LoginPage import LoginPage
-from Features.PageObjects.SignupPage import SignupPage
-from Features.PageObjects.HeaderNav import HeaderNav
-from Features.PageObjects.ContactUsPage import ContactUsPage
+from features.PageObjects.BasePage import BasePage
+from features.PageObjects.LoginPage import LoginPage
+from features.PageObjects.SignupPage import SignupPage
+from features.PageObjects.HeaderNav import HeaderNav
+from features.PageObjects.ContactUsPage import ContactUsPage
 from Utilities.LogUtil import setup_logger
-from Features.PageObjects.AllProducts import AllProducts
+from features.PageObjects.AllProducts import AllProducts
 
 LOG_DIR = 'Logs'
 
