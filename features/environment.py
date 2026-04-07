@@ -2,7 +2,6 @@ import os
 import time
 from datetime import datetime
 from pathlib import Path
-from dotenv import load_dotenv
 import logging
 import logging.config
 
@@ -10,13 +9,14 @@ import allure
 from allure_commons.types import AttachmentType
 from playwright.sync_api import sync_playwright
 from Utilities.DBManager import DBManager
-from Features.PageObjects.BasePage import BasePage
-from Features.PageObjects.LoginPage import LoginPage
-from Features.PageObjects.SignupPage import SignupPage
-from Features.PageObjects.HeaderNav import HeaderNav
-from Features.PageObjects.ContactUsPage import ContactUsPage
+from Utilities import Controller as con
+from features.PageObjects.BasePage import BasePage
+from features.PageObjects.LoginPage import LoginPage
+from features.PageObjects.SignupPage import SignupPage
+from features.PageObjects.HeaderNav import HeaderNav
+from features.PageObjects.ContactUsPage import ContactUsPage
 from Utilities.LogUtil import setup_logger
-from Features.PageObjects.AllProducts import AllProducts
+from features.PageObjects.AllProducts import AllProducts
 
 LOG_DIR = 'Logs'
 
@@ -25,9 +25,7 @@ def before_all(context):
     # Ensure the log directory exists
     os.makedirs(LOG_DIR, exist_ok=True)
 
-    # Load environment variables from .env file
-    dotenv_path = ".\\secrets.env"
-    load_dotenv(dotenv_path=dotenv_path, override=True)
+    context.IS_DOCKER = con.init_env() # Loading environment variables
     BROWSER = os.environ.get("BROWSER")
 
     # Initiation of DB class which handles storing and fetching tests, test results, etc.
@@ -39,16 +37,20 @@ def before_all(context):
     context.video_dir = Path("VideoReports")
     context.video_dir.mkdir(parents=True, exist_ok=True)
 
+    if context.IS_DOCKER:
+        headless_mode = True
+    else:
+        headless_mode = True if os.getenv("HEADLESS") == "True" else False
+
     if BROWSER.lower() in ("chrome", "chromium"):
-        context.browser = context.playwright.chromium.launch(headless=False,
-                                                             channel="chrome",
+        context.browser = context.playwright.chromium.launch(headless=headless_mode,
                                                              slow_mo=500  # Milliseconds
                                                              )
     elif BROWSER.lower() == "firefox":
-        context.browser = context.playwright.firefox.launch(headless=False)
+        context.browser = context.playwright.firefox.launch(headless=True if os.getenv("HEADLESS") == "True" else False)
     else:
         raise Exception(f"Unsupported browser: {BROWSER}")
-    context.environment = "DEV"
+    context.environment = os.getenv("TESTING_ENVIRONMENT")
 
 
 def before_scenario(context, scenario):
@@ -56,7 +58,9 @@ def before_scenario(context, scenario):
 
     # Define the video path based on the scenario name and sanitize filename
     sanitized_scenario_name = "".join(c for c in scenario.name if c.isalnum() or c in (' ', '.', '_')).replace(' ', '_')
-    context.scenario_video_path = context.video_dir / f"{sanitized_scenario_name}_{datetime.now().strftime("%m_%d_%Y_%H_%M_%S")}.webm"
+    timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+    filename = f"{sanitized_scenario_name}_{timestamp}.webm"
+    context.scenario_video_path = context.video_dir / filename
 
     # Create the unique log file path
     log_file_path = os.path.join(LOG_DIR, f"{sanitized_scenario_name}.log")
@@ -68,6 +72,7 @@ def before_scenario(context, scenario):
     context.logger.info(f"STARTING SCENARIO: {scenario.name}")
 
     context.browser = context.browser.new_context(
+        ignore_https_errors=True if context.IS_DOCKER else False,
         record_video_dir=context.video_dir,
         record_video_size={"width": 1280, "height": 720},  # Recommended size
         viewport={"width": 1280, "height": 720},
@@ -77,18 +82,7 @@ def before_scenario(context, scenario):
 
     context.page = context.browser.new_page()
 
-    # Block a wider range of ad-related domains and patterns
-    ad_patterns = [
-        "**/googleads.g.doubleclick.net/**",
-        "**/pagead2.googlesyndication.com/**",
-        "**/tpc.googlesyndication.com/**",
-        "**/adservice.google.com/**",
-        "**/*adsbygoogle*",
-        "**/*vignette*"
-    ]
-
-    for pattern in ad_patterns:
-        context.page.route(pattern, lambda route: route.abort())
+    con.block_ads(context.page)
 
     context.bp = BasePage(context.page)
     context.lp = LoginPage(context.page)
@@ -130,25 +124,32 @@ def after_scenario(context, scenario):
         environment=context.environment
     )
 
+    # Capture the path before closing anything
+    temp_video_path = context.page.video.path() if context.page.video else None
+
+    # Close the page and browser context FIRST
+    # This ensures Playwright flushes the video buffer to the disk
     context.page.close()
-    time.sleep(2)
+    context.browser.close()
 
-    # Get the actual video path from Playwright after the context is closed
-    # Playwright might append a hash to the filename
-    video_file_path = context.page.video.path() if context.page.video else None
+    # Use the finalized file for Allure and Renaming
+    if temp_video_path and os.path.exists(temp_video_path):
+        # Attach to Allure using the actual file that exists
+        allure.attach.file(
+            temp_video_path,
+            name=f"{scenario.name} Video",
+            attachment_type=AttachmentType.WEBM
+        )
 
-    if video_file_path and os.path.exists(video_file_path):
-        # If Playwright generated a different name, rename it to our desired name
-        # This makes sure the file name is clean and readable for the scenario
+        # Now rename it for "VideoReports" folder if desired
         try:
-            os.rename(video_file_path, context.scenario_video_path)
-            context.logger.info(f"Video saved for scenario '{scenario.name}': {context.scenario_video_path.resolve()}")
+            # Note: After renaming, the file moves from temp_video_path to context.scenario_video_path
+            os.rename(temp_video_path, context.scenario_video_path)
+            context.logger.info(f"Video saved and attached: {context.scenario_video_path}")
         except OSError as e:
-            context.logger.info(f"Error renaming video for '{scenario.name}': {e}")
-            context.logger.info(f"Original video path: {video_file_path}")
-            context.logger.info(f"Desired video path: {context.scenario_video_path}")
+            context.logger.info(f"Rename failed, but attachment should have worked: {e}")
     else:
-        context.logger.info(f"No video generated or found for scenario '{scenario.name}'.")
+        context.logger.info(f"No video found at {temp_video_path}")
 
     # Log the scenario status
     context.logger.info(f"SCENARIO FINISHED. {scenario.status}")
@@ -164,7 +165,6 @@ def after_scenario(context, scenario):
 
 def after_all(context):
     """Cleanup after the test run."""
-    context.browser.close()
     context.playwright.stop()
     context.db.close()
 

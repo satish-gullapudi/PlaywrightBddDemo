@@ -1,4 +1,4 @@
-from Features.PageObjects.BasePage import BasePage
+from features.PageObjects.BasePage import BasePage
 import Utilities.Locators as loc
 
 

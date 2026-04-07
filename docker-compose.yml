@@ -1,0 +1,18 @@
+services:
+  automation-app:
+    build: .
+    image: bddpoc:latest
+    ports:
+      - "8501:8501" # Streamlit Dashboard
+      - "8080:8080" # Allure Report
+    ipc: host
+    env_file:
+      - secrets.env
+    volumes:
+      # This maps your local folders to the container.
+      # Any test results or logs generated inside will appear on your C: drive immediately.
+      - .:/app
+      # Prevents the local node_modules or venv from overwriting the container's setup
+      - /app/venv
+    stdin_open: true
+    tty: true

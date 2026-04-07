@@ -1,6 +1,4 @@
 from behave import *
-from browser_use.tools.service import Controller
-from playwright.sync_api import expect
 
 from Utilities.ReadConfig import readConfig as rc
 from Utilities import Controller as con

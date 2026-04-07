@@ -1,0 +1,17 @@
+--- Docker image build ---
+docker build -t <image_name_you_like> .
+
+--- Run docker container ---
+docker run -p 8501:8501 --ipc=host <image_name>
+
+--- Docker compose commands ---
+docker-compose --build
+docker compose up --build
+docker compose down
+
+--- Clean disk space Use with caution---
+docker system prune
+docker system prune -a
+docker volume prune
+docker builder prune
+docker-compose down --rmi local --volumes

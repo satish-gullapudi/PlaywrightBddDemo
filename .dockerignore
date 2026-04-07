@@ -1,0 +1,11 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+secrets.env
+Logs/
+VideoReports/
+allure-results/
+Rough/
+.zip
